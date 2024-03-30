@@ -14,6 +14,7 @@ mongoose.connect("mongodb://localhost/auth-service", {
 .then(() => console.log(`DB is connected`));
 
 // routes
+//login
 app.post('/auth/login', async(req, res) => {
     const {email, password} = req.body;
 
@@ -21,28 +22,30 @@ app.post('/auth/login', async(req, res) => {
     
     const user = await userModel.findOne( {email } );
     console.log('user :>> ', user);
+    
     if( !user ){
         return res.json({message: `User dosent exist`});
     }
     else{
-    try{
-        if(password !== user.password){
-            return res.json({message: `Wrong password!`});
+        try{
+            if(password !== user.password){
+                return res.json({message: `Wrong password!`});
+            }
+            const payload = {
+                email,
+                password
+            };
+// create token
+            jwt.sign(payload, "secret", (err, token) => {
+                    if( err ) console.log( err);
+                    else return res.json({token: token})
+            });
+            
+        } catch(err){
+            console.log(`Error in login ${err}`);
+            return res.status(500)
         }
-        const payload = {
-            email,
-             password
-        };
-
-        jwt.sign(payload, "secret", (err, token) => {
-                if( err ) console.log( err);
-                else return res.json({token: token})
-        });
-        
-    } catch(err){
-        console.log(`Error in login ${err}`);
-        return res.status(500)
-    }}
+    }
 });
 
 // creating a new user
